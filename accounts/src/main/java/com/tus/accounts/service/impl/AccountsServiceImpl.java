@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import com.tus.accounts.constants.AccountsConstants;
 import com.tus.accounts.dto.CustomerDto;
 import com.tus.accounts.entity.Customer;
+import com.tus.accounts.exception.CustomerAlreadyExistsException;
 import com.tus.accounts.repository.AccountsRepository;
 import com.tus.accounts.repository.CustomerRepository;
 import com.tus.accounts.service.IAccountService;
@@ -13,6 +14,7 @@ import com.tus.accounts.entity.Accounts;
 import com.tus.accounts.mapper.*;
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.Optional;
 
 
 
@@ -22,9 +24,15 @@ public class AccountsServiceImpl implements IAccountService{
     private AccountsRepository accountsRepository;
     private CustomerRepository customerRepository;
 
-
+    
     public void createAccount(CustomerDto customerDto){
             Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
+            Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
+
+            if(optionalCustomer.isPresent()){
+                throw new CustomerAlreadyExistsException("Customer already registered with this mobile number "+customerDto.getMobileNumber());
+            }
+
             customer.setCreatedAt(LocalDateTime.now());
             customer.setCreatedBy("default");
             customer.setUpdatedBy("default");
